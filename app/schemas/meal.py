@@ -1,4 +1,14 @@
+from typing import Literal
+
 from pydantic import BaseModel
+
+
+MealType = Literal[
+    "cafe_da_manha",
+    "almoco",
+    "pre_treino",
+    "jantar"
+]
 
 
 class MealItemCreate(BaseModel):
@@ -12,7 +22,7 @@ class MealItemCreate(BaseModel):
 
 
 class MealCreate(BaseModel):
-    meal_type: str
+    meal_type: MealType
     image_path: str | None = None
     items: list[MealItemCreate]
 
@@ -44,3 +54,11 @@ class MealResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class MealDayResponse(BaseModel):
+    date: str
+    meals: list[MealResponse]
+    total_calories: float
+    total_protein_g: float
+    total_carbohydrates_g: float
+    total_fats_g: float

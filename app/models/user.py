@@ -48,3 +48,19 @@ class User(Base):
         "Meal",
         back_populates="user"
     )
+    body_measurements = relationship(
+    "BodyMeasurement",
+    back_populates="user",
+    cascade="all, delete-orphan"
+    )
+    profile = relationship(
+        "UserProfile",
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan"
+    )
+    ai_progress_analyses = relationship(
+        "AIProgressAnalysis",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )

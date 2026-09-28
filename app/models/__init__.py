@@ -4,3 +4,7 @@ from app.models.nutrition_goal import NutritionGoal
 from app.models.food import Food
 from app.models.meal import Meal
 from app.models.meal_item import MealItem
+from app.models.body_measurement import BodyMeasurement
+from app.models.user_profile import UserProfile
+from app.models.ai_progress_analysis import AIProgressAnalysis
+from app.models.current_strategy import CurrentStrategy

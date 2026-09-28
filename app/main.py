@@ -7,6 +7,12 @@ from app.routes.body_assessments import router as body_assessments_router
 from app.database.database import engine
 from app.routes.meals import router as meals_router
 from app.routes.nutrition_suggestions import router as nutrition_suggestions_router
+from app.routes.user_profile import router as user_profile_router
+from app.routes.body_measurements import router as body_measurements_router
+from app.routes.current_strategy import router as current_strategy_router
+from app.routes.ai_progress_analysis import router as ai_progress_analysis_router
+from app.routes.strategy_ai import router as strategy_ai_router
+from app.routes.dashboard import router as dashboard_router
 from app.database.base import Base
 from app.models import (
     User,
@@ -15,8 +21,11 @@ from app.models import (
     Food,
     Meal,
     MealItem,
+    BodyMeasurement,
+    UserProfile,
+    AIProgressAnalysis,
+    CurrentStrategy,
 )
-
 
 app = FastAPI(
     title="Kate App API",
@@ -24,6 +33,12 @@ app = FastAPI(
     version="1.0.0"
 )
 
+app.include_router(dashboard_router)    
+app.include_router(strategy_ai_router)
+app.include_router(current_strategy_router) 
+app.include_router(ai_progress_analysis_router)
+app.include_router(user_profile_router)
+app.include_router(body_measurements_router)
 app.include_router(meals_router)
 app.include_router(nutrition_suggestions_router)
 app.include_router(body_assessments_router)
