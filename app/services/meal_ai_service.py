@@ -1,3 +1,4 @@
+import asyncio
 import json
 
 from google import genai
@@ -16,6 +17,7 @@ async def analyze_meal_image(
     ingredients: str | None = None,
     comment: str | None = None
 ):
+
     prompt = f"""
 Você é um assistente de análise nutricional de refeições.
 
@@ -24,9 +26,11 @@ Analise a imagem fornecida e identifique os alimentos visíveis.
 Informações adicionais fornecidas pelo usuário:
 
 Ingredientes informados:
+
 {ingredients or "Nenhum ingrediente informado."}
 
 Comentário:
+
 {comment or "Nenhum comentário informado."}
 
 Use as informações fornecidas pelo usuário para complementar a análise
@@ -37,6 +41,7 @@ as informações explícitas do usuário como referência e indique a
 incerteza quando necessário.
 
 Para cada alimento identificado, estime:
+
 - nome
 - quantidade em gramas
 - calorias
@@ -74,6 +79,7 @@ Formato obrigatório:
 }}
 
 Regras:
+
 - confidence deve ser "baixa", "média" ou "alta".
 - Os valores nutricionais são estimativas.
 - Considere os ingredientes e comentários fornecidos pelo usuário.
@@ -82,29 +88,64 @@ Regras:
 - limitations deve explicar as principais incertezas da análise.
 """
 
-    response = await client.aio.models.generate_content(
-        model="gemini-3.6-flash",
-        contents=[
-            {
-                "inline_data": {
-                    "mime_type": mime_type,
-                    "data": image_bytes
-                }
-            },
-            prompt
-        ]
-    )
+    max_attempts = 3
 
-    response_text = response.text.strip()
+    for attempt in range(max_attempts):
 
-    try:
-        return json.loads(response_text)
+        try:
 
-    except json.JSONDecodeError:
-        if response_text.startswith("```json"):
-            response_text = response_text[7:]
+            response = await client.aio.models.generate_content(
+                model="gemini-3.6-flash",
+                contents=[
+                    {
+                        "inline_data": {
+                            "mime_type": mime_type,
+                            "data": image_bytes
+                        }
+                    },
+                    prompt
+                ]
+            )
 
-        if response_text.endswith("```"):
-            response_text = response_text[:-3]
+            response_text = response.text.strip()
 
-        return json.loads(response_text.strip())
+            try:
+                return json.loads(response_text)
+
+            except json.JSONDecodeError:
+
+                if response_text.startswith("```json"):
+                    response_text = response_text[7:]
+
+                if response_text.endswith("```"):
+                    response_text = response_text[:-3]
+
+                return json.loads(response_text.strip())
+
+        except Exception as error:
+
+            error_code = getattr(error, "code", None)
+
+            print(
+                f"Erro ao analisar refeição com a IA "
+                f"(tentativa {attempt + 1}/{max_attempts}): "
+                f"{error}"
+            )
+
+            # Tenta novamente apenas em erros temporários
+            if error_code in (429, 502, 503, 504):
+
+                if attempt < max_attempts - 1:
+
+                    wait_time = 2 ** attempt
+
+                    print(
+                        f"Gemini temporariamente indisponível. "
+                        f"Nova tentativa em {wait_time} segundos..."
+                    )
+
+                    await asyncio.sleep(wait_time)
+
+                    continue
+
+            raise error
